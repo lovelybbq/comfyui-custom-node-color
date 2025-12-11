@@ -4,6 +4,10 @@ A modern, GUI-based color picker for ComfyUI nodes. Change any node's background
 
 ![Screenshot](screenshot.png)
 
+> [!IMPORTANT]
+> NODES 2.0 ARE NOT TESTED FOR COMPATIBILITY
+
+
 ## ✨ Features
 
 - **Modern GUI**: Glassmorphism design with blur effects and smooth animations.
