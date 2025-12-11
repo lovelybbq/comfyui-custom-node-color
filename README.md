@@ -2,7 +2,7 @@
 
 A modern, GUI-based color picker for ComfyUI nodes. Change any node's background color to **any** custom value using a visual spectrum, HEX/RGB inputs, or an eyedropper tool. Supports multi-selection and favorite colors.
 
-![Screenshot](screenshot.png)
+![Screenshot](screenshots/screenshot1.png)
 
 ## ✨ Features
 
@@ -51,6 +51,57 @@ A modern, GUI-based color picker for ComfyUI nodes. Change any node's background
 - **EyeDropper**: Click the pipette icon to pick a color from your screen.
 - **Favorites**: Click the `☆` to save a color. Click `★` to remove it.
 - **Reset**: Click the `↺` icon to revert to the node's original color (only available when 1 node is selected).
+
+## 📦 Nodes
+
+![Screenshot](screenshots/screenshot2.png)
+
+### 1️⃣ **Hex Color Input** 🎨
+Interactive HEX color picker node with three integrated elements:
+
+**Outputs:**
+- `HEX` - Hex color string (e.g., `#FF5733`)
+
+**Features:**
+- 🖱️ Click to edit HEX value via text prompt
+- 🎨 Real-time color preview square
+- 🎭 "Pick Color" button with visual color picker dialog
+- ✨ Glassmorphism design matching ComfyUI aesthetic
+
+**Example:**
+```
+[Hex Color Input] → #FF5733 → Connect to other nodes
+```
+
+---
+
+### 2️⃣ **Convert HEX To RGB** 🔄
+Converts HEX color values to RGB components.
+
+**Inputs:**
+- `hex_color` - Hex color string (e.g., `#FF5733` or `FF5733`)
+
+**Outputs:**
+- `R` - Red channel (0-255)
+- `G` - Green channel (0-255)
+- `B` - Blue channel (0-255)
+- `RGB` - RGB string format (e.g., `"255, 87, 51"`)
+
+**Features:**
+- ✅ Auto-validates and cleans input
+- 🛡️ Handles invalid HEX gracefully (defaults to black)
+- 📊 Returns both individual integers and formatted string
+
+**Example:**
+```
+[Hex Color Input] → #FF5733 → [Convert HEX To RGB]
+                                 ├─ R: 255
+                                 ├─ G: 87
+                                 ├─ B: 51
+                                 └─ RGB: "255, 87, 51"
+```
+
+---
 
 ## 🌐 Browser Support
 
