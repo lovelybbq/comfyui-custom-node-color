@@ -1,8 +1,66 @@
-import { app } from "../../scripts/app.js";
+// js/lovely_color_picker.js
 
 // ============================================================================
-// 1. HELPERS & UTILS
+// SHARED UTILS & STYLES
 // ============================================================================
+
+// Inject styles once
+if (!document.getElementById('lovely-picker-styles')) {
+    const cssStyle = document.createElement('style');
+    cssStyle.id = 'lovely-picker-styles';
+    cssStyle.innerHTML = `
+        .cp-panel {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 280px; padding: 15px;
+            background: rgba(12, 12, 12, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            font-family: sans-serif; color: white; user-select: none; z-index: 10000;
+            display: flex; flex-direction: column; gap: 10px; box-sizing: border-box;
+        }
+        .cp-header { font-size: 12px; font-weight: bold; opacity: 0.7; text-align: center; margin-bottom: 2px; }
+        .cp-canvas-wrap { position: relative; width: 100%; border-radius: 8px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1); }
+        .cp-cursor { position: absolute; border: 2px solid white; box-shadow: 0 0 2px black; pointer-events: none; transform: translate(-50%, -50%); }
+        .cp-cursor.round { width: 12px; height: 12px; border-radius: 50%; }
+        .cp-cursor.bar { width: 8px; height: 18px; border-radius: 4px; top: 50%; background: white; border: none; box-shadow: 0 0 4px rgba(0,0,0,0.5); }
+        .cp-row { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+        .cp-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
+        .cp-label { font-size: 9px; opacity: 0.5; margin-bottom: 2px; letter-spacing: 1px; }
+        .cp-input {
+            width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15);
+            color: white; border-radius: 6px; padding: 4px 0; text-align: center; font-size: 11px;
+            outline: none; -moz-appearance: textfield;
+        }
+        .cp-input::-webkit-outer-spin-button, .cp-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .cp-input.hex { font-family: monospace; letter-spacing: 1px; height: 32px; padding: 0 8px; color: rgba(255,255,255,0.9); }
+        .cp-btn {
+            width: 100%; padding: 10px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; border: 1px solid transparent;
+        }
+        .cp-btn.done { background: white; color: black; }
+        .cp-btn.done:hover { opacity: 0.8; }
+        .cp-btn.cancel { background: rgba(255, 50, 50, 0.15); color: #ffcccc; border-color: rgba(255, 50, 50, 0.25); }
+        .cp-btn.cancel:hover { background: rgba(255, 50, 50, 0.25); }
+        .cp-icon-btn {
+            width: 32px; height: 32px; flex-shrink: 0;
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 16px; color: #ccc; transition: all 0.2s ease;
+        }
+        .cp-icon-btn:hover { background: rgba(255,255,255,0.2); color: white; }
+        .cp-icon-btn.modified { background: rgba(255, 50, 50, 0.2) !important; border-color: rgba(255, 80, 80, 0.4) !important; color: #ffcccc !important; box-shadow: 0 0 8px rgba(255, 0, 0, 0.25); }
+        .cp-fav-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; min-height: 24px; }
+        .cp-fav-empty { grid-column: span 7; text-align: center; font-size: 10px; opacity: 0.4; padding: 4px 0; }
+        .cp-swatch { 
+            aspect-ratio: 1; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); box-sizing: border-box; cursor: pointer; transition: 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .cp-swatch:hover { transform: scale(1.15); border-color: rgba(255,255,255,0.8); z-index: 2; }
+        .cp-swatch:active { transform: scale(0.9); }
+        .cp-swatch.active { border: 2px solid white !important; box-shadow: 0 0 0 2px rgba(0,0,0,0.5), 0 0 8px rgba(255,255,255,0.5); transform: scale(1.1); z-index: 5; }
+        .cp-swatch.marking-delete { border-color: #ff4444 !important; opacity: 0.5; transform: scale(0.8); position: relative; }
+        .cp-swatch.marking-delete::after { content: "×"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ff4444; font-size: 20px; font-weight: bold; pointer-events: none; }
+    `;
+    document.head.appendChild(cssStyle);
+}
 
 const $el = (tag, props = {}, children = []) => {
     const el = document.createElement(tag);
@@ -60,101 +118,34 @@ const FavoritesManager = {
             if (favs.length > FavoritesManager.MAX) favs.pop();
         }
         FavoritesManager.save(favs);
-    },
+    }
 };
 
 // ============================================================================
-// 2. STYLES
+// MAIN CLASS EXPORT
 // ============================================================================
 
-const cssStyle = document.createElement('style');
-cssStyle.innerHTML = `
-    .cp-panel {
-        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 280px; padding: 15px;
-        background: rgba(12, 12, 12, 0.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-        border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);
-        box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-        font-family: sans-serif; color: white; user-select: none; z-index: 10000;
-        display: flex; flex-direction: column; gap: 10px; box-sizing: border-box;
-    }
-    .cp-header { font-size: 12px; font-weight: bold; opacity: 0.7; text-align: center; margin-bottom: 2px; }
-    .cp-canvas-wrap { position: relative; width: 100%; border-radius: 8px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1); }
-    .cp-cursor { position: absolute; border: 2px solid white; box-shadow: 0 0 2px black; pointer-events: none; transform: translate(-50%, -50%); }
-    .cp-cursor.round { width: 12px; height: 12px; border-radius: 50%; }
-    .cp-cursor.bar { width: 8px; height: 18px; border-radius: 4px; top: 50%; background: white; border: none; box-shadow: 0 0 4px rgba(0,0,0,0.5); }
-    
-    .cp-row { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
-    .cp-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
-    .cp-label { font-size: 9px; opacity: 0.5; margin-bottom: 2px; letter-spacing: 1px; }
-    
-    .cp-input {
-        width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15);
-        color: white; border-radius: 6px; padding: 4px 0; text-align: center; font-size: 11px;
-        outline: none; -moz-appearance: textfield;
-    }
-    .cp-input::-webkit-outer-spin-button, .cp-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-    .cp-input.hex { font-family: monospace; letter-spacing: 1px; height: 32px; padding: 0 8px; color: rgba(255,255,255,0.9); }
-
-    .cp-btn {
-        width: 100%; padding: 10px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; border: 1px solid transparent;
-    }
-    .cp-btn.done { background: white; color: black; }
-    .cp-btn.done:hover { opacity: 0.8; }
-    .cp-btn.cancel { background: rgba(255, 50, 50, 0.15); color: #ffcccc; border-color: rgba(255, 50, 50, 0.25); }
-    .cp-btn.cancel:hover { background: rgba(255, 50, 50, 0.25); }
-
-    .cp-icon-btn {
-        width: 32px; height: 32px; flex-shrink: 0;
-        background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px;
-        cursor: pointer; display: flex; align-items: center; justify-content: center;
-        font-size: 16px; color: #ccc; transition: all 0.2s ease;
-    }
-    .cp-icon-btn:hover { background: rgba(255,255,255,0.2); color: white; }
-    .cp-icon-btn.modified { background: rgba(255, 50, 50, 0.2) !important; border-color: rgba(255, 80, 80, 0.4) !important; color: #ffcccc !important; box-shadow: 0 0 8px rgba(255, 0, 0, 0.25); }
-    
-    .cp-fav-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; min-height: 24px; }
-    .cp-fav-empty { grid-column: span 7; text-align: center; font-size: 10px; opacity: 0.4; padding: 4px 0; }
-    .cp-swatch { 
-        aspect-ratio: 1; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); box-sizing: border-box; cursor: pointer; transition: 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-    }
-    .cp-swatch:hover { transform: scale(1.15); border-color: rgba(255,255,255,0.8); z-index: 2; }
-    .cp-swatch:active { transform: scale(0.9); }
-    .cp-swatch.active { border: 2px solid white !important; box-shadow: 0 0 0 2px rgba(0,0,0,0.5), 0 0 8px rgba(255,255,255,0.5); transform: scale(1.1); z-index: 5; }
-    .cp-swatch.marking-delete { border-color: #ff4444 !important; opacity: 0.5; transform: scale(0.8); position: relative; }
-    .cp-swatch.marking-delete::after { content: "×"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ff4444; font-size: 20px; font-weight: bold; pointer-events: none; }
-`;
-document.head.appendChild(cssStyle);
-
-// ============================================================================
-// 3. COMPONENT CLASS
-// ============================================================================
-
-class CustomColorPicker {
-    constructor(targetNodes, canvas, onClose) {
-        this.nodes = targetNodes;
-        this.canvas = canvas;
-        this.onClose = onClose;
-        this.initialMap = new Map(targetNodes.map(n => [n.id, n.bgcolor || "#000000"]));
+export class LovelyColorPicker {
+    constructor(initialColor, onColorChange, title = "Select Color") {
+        this.onColorChange = onColorChange;
+        this.initialColor = initialColor || "#000000";
+        this.title = title;
         this.isPicking = false;
         
         // Init State
-        const startRgb = ColorUtils.hexToRgb(targetNodes[0].bgcolor || "#000000");
+        const startRgb = ColorUtils.hexToRgb(this.initialColor);
         this.state = ColorUtils.rgbToHsv(startRgb.r, startRgb.g, startRgb.b);
 
-        // Render
         this.render();
         this.updateUI();
         this.bindGlobalEvents();
     }
 
     render() {
-        this.el = $el("div", { className: "cp-panel", events: { 
-            pointerdown: (e) => e.stopPropagation() 
-        }});
+        this.el = $el("div", { className: "cp-panel", events: { pointerdown: (e) => e.stopPropagation() }});
 
         // Header
-        $el("div", { className: "cp-header", text: this.nodes.length > 1 ? `Custom Color (${this.nodes.length})` : "Custom Node Color", parent: this.el });
+        $el("div", { className: "cp-header", text: this.title, parent: this.el });
 
         // SV Canvas
         const svWrap = $el("div", { className: "cp-canvas-wrap", style: { height: "140px", cursor: "crosshair" }, parent: this.el });
@@ -167,7 +158,6 @@ class CustomColorPicker {
         this.hueCanvas = $el("canvas", { attrs: { width: 250, height: 14 }, style: { width: "100%", height: "100%", display: "block" }, parent: hueWrap });
         this.hueCursor = $el("div", { className: "cp-cursor bar", parent: hueWrap });
         this.bindDrag(hueWrap, (x, y) => { this.state.h = x; this.updateUI(); });
-
         this.drawHueCanvas();
 
         // RGB Inputs
@@ -213,15 +203,13 @@ class CustomColorPicker {
         });
 
         // Reset Btn
-        if (this.nodes.length === 1) {
-            this.resetBtn = $el("div", { 
-                className: "cp-icon-btn", text: "↺", attrs: { title: "Reset" },
-                events: { click: () => this.applyColor(this.initialMap.get(this.nodes[0].id)) },
-                parent: ctrlRow 
-            });
-        }
+        this.resetBtn = $el("div", { 
+            className: "cp-icon-btn", text: "↺", attrs: { title: "Reset" },
+            events: { click: () => this.applyColor(this.initialColor) },
+            parent: ctrlRow 
+        });
 
-        // Eyedropper Btn (Updated Icon)
+        // Eyedropper
         if (window.EyeDropper) {
             $el("div", {
                 className: "cp-icon-btn",
@@ -232,7 +220,7 @@ class CustomColorPicker {
             });
         }
 
-        // Star Btn
+        // Favorites
         this.starBtn = $el("div", { 
             className: "cp-icon-btn", style: { fontSize: "18px" },
             events: {
@@ -250,7 +238,7 @@ class CustomColorPicker {
             parent: ctrlRow
         });
 
-        // Favorites
+        // Fav Container
         this.favContainer = $el("div", { className: "cp-fav-grid", parent: this.el });
 
         // Footer
@@ -314,19 +302,16 @@ class CustomColorPicker {
     }
 
     updateUI(skipInputType = null) {
-        // Redraw SV
         const ctx = this.svCanvas.getContext("2d"), w = this.svCanvas.width, h = this.svCanvas.height;
         const rgb = ColorUtils.hsvToRgb(this.state.h, 1, 1);
         ctx.fillStyle = `rgb(${rgb.r},${rgb.g},${rgb.b})`; ctx.fillRect(0, 0, w, h);
         const gw = ctx.createLinearGradient(0, 0, w, 0); gw.addColorStop(0, "white"); gw.addColorStop(1, "rgba(255,255,255,0)"); ctx.fillStyle = gw; ctx.fillRect(0, 0, w, h);
         const gb = ctx.createLinearGradient(0, 0, 0, h); gb.addColorStop(0, "rgba(0,0,0,0)"); gb.addColorStop(1, "black"); ctx.fillStyle = gb; ctx.fillRect(0, 0, w, h);
 
-        // Update Cursors
         this.svCursor.style.left = (this.state.s * 100) + "%"; this.svCursor.style.top = ((1 - this.state.v) * 100) + "%";
         this.svCursor.style.borderColor = this.state.v < 0.5 ? "white" : "black"; 
         this.hueCursor.style.left = (this.state.h * 100) + "%";
 
-        // Update Values
         const curRgb = this.getCurrentRgb();
         const hex = ColorUtils.rgbToHex(curRgb.r, curRgb.g, curRgb.b);
 
@@ -335,9 +320,8 @@ class CustomColorPicker {
             this.rgbInputs.r.value = curRgb.r; this.rgbInputs.g.value = curRgb.g; this.rgbInputs.b.value = curRgb.b;
         }
 
-        // Apply
-        this.nodes.forEach(n => n.bgcolor = hex);
-        if (this.canvas) this.canvas.setDirty(true, true);
+        // CALLBACK: Pass the color back to whoever called us
+        if (this.onColorChange) this.onColorChange(hex);
 
         // Favorites UI
         this.renderFavorites(hex);
@@ -346,11 +330,9 @@ class CustomColorPicker {
         this.starBtn.textContent = isFav ? "★" : "☆";
         this.starBtn.style.color = isFav ? "#FFD700" : "#ccc";
         this.starBtn.style.borderColor = isFav ? "#FFD700" : "rgba(255,255,255,0.2)";
-        this.starBtn.title = isFav ? "Remove Favorite" : "Add Favorite";
 
-        if (this.resetBtn && this.nodes.length === 1) {
-            const initial = this.initialMap.get(this.nodes[0].id);
-            if (hex.toLowerCase() !== initial.toLowerCase()) this.resetBtn.classList.add("modified");
+        if (this.resetBtn) {
+            if (hex.toLowerCase() !== this.initialColor.toLowerCase()) this.resetBtn.classList.add("modified");
             else this.resetBtn.classList.remove("modified");
         }
     }
@@ -373,7 +355,7 @@ class CustomColorPicker {
     }
 
     cancel() {
-        this.nodes.forEach(n => { if (this.initialMap.has(n.id)) n.bgcolor = this.initialMap.get(n.id); });
+        if (this.onColorChange) this.onColorChange(this.initialColor);
         this.close();
     }
 
@@ -382,37 +364,6 @@ class CustomColorPicker {
             document.removeEventListener("pointerdown", this.clickOutsideHandler, { capture: true });
             this.clickOutsideHandler = null;
         }
-        requestAnimationFrame(() => {
-            if (this.el?.parentNode) this.el.parentNode.removeChild(this.el);
-            if (this.onClose) this.onClose();
-            if (this.canvas) this.canvas.setDirty(true, true);
-        });
+        if (this.el?.parentNode) this.el.parentNode.removeChild(this.el);
     }
 }
-
-// ============================================================================
-// 4. REGISTRATION
-// ============================================================================
-
-app.registerExtension({
-    name: "Comfy.CustomNodeColorPicker",
-    async setup() {
-        const origOptions = LGraphCanvas.prototype.getNodeMenuOptions;
-        LGraphCanvas.prototype.getNodeMenuOptions = function(node) {
-            const opts = origOptions.apply(this, arguments);
-            const canvas = this;
-            const nodes = (canvas.selected_nodes && canvas.selected_nodes[node.id]) 
-                ? Object.values(canvas.selected_nodes) : [node];
-
-            opts.push(null);
-            opts.push({
-                content: "Custom Node Color",
-                callback: () => {
-                    document.querySelector(".cp-panel")?.remove(); 
-                    new CustomColorPicker(nodes, canvas, () => {});
-                }
-            });
-            return opts;
-        }
-    }
-});
