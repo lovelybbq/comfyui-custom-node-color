@@ -28,7 +28,8 @@ app.registerExtension({
                             nodes.forEach(n => n.bgcolor = newHex);
                             canvas.setDirty(true, true);
                         },
-                        nodes.length > 1 ? `Custom Color (${nodes.length})` : "Custom Node Color"
+                        nodes.length > 1 ? `Custom Color (${nodes.length})` : "Custom Node Color",
+                        nodes.length > 1  // Hide reset button if multiple nodes selected
                     );
                 }
             });

@@ -126,10 +126,11 @@ const FavoritesManager = {
 // ============================================================================
 
 export class LovelyColorPicker {
-    constructor(initialColor, onColorChange, title = "Select Color") {
+    constructor(initialColor, onColorChange, title = "Select Color", hideReset = false) {
         this.onColorChange = onColorChange;
         this.initialColor = initialColor || "#000000";
         this.title = title;
+        this.hideReset = hideReset;
         this.isPicking = false;
         
         // Init State
@@ -203,11 +204,13 @@ export class LovelyColorPicker {
         });
 
         // Reset Btn
-        this.resetBtn = $el("div", { 
-            className: "cp-icon-btn", text: "↺", attrs: { title: "Reset" },
-            events: { click: () => this.applyColor(this.initialColor) },
-            parent: ctrlRow 
-        });
+        if (!this.hideReset) {
+            this.resetBtn = $el("div", { 
+                className: "cp-icon-btn", text: "↺", attrs: { title: "Reset" },
+                events: { click: () => this.applyColor(this.initialColor) },
+                parent: ctrlRow 
+            });
+        }
 
         // Eyedropper
         if (window.EyeDropper) {
