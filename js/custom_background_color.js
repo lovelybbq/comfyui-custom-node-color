@@ -48,62 +48,40 @@ app.registerExtension({
         }
 
         // ============================================================
-        // GROUP COLOR MENU - Hook into processContextMenu
+        // GROUP COLOR MENU - Hook into LGraphGroup.prototype.getMenuOptions
         // ============================================================
-        const origProcessContextMenu = LGraphCanvas.prototype.processContextMenu;
-        LGraphCanvas.prototype.processContextMenu = function(node, event) {
-            // Check if we clicked on a group
-            const group = this.graph.getGroupOnPos(event.canvasX, event.canvasY);
+        const origGroupGetMenuOptions = LGraphGroup.prototype.getMenuOptions;
+        LGraphGroup.prototype.getMenuOptions = function(graphCanvas) {
+            const opts = origGroupGetMenuOptions ? origGroupGetMenuOptions.apply(this, arguments) : [];
+            const group = this;
+            const canvas = graphCanvas || app.canvas;
             
-            if (group && !node) {
-                // We clicked on a group (not a node)
-                const canvas = this;
-                
-                // Get original menu options using new API (LGraphGroup.getMenuOptions)
-                let options = [];
-                if (group.getMenuOptions) {
-                    options = group.getMenuOptions(this) || [];
-                } else if (LGraphCanvas.prototype.getGroupMenuOptions) {
-                    // Fallback to deprecated method
-                    options = LGraphCanvas.prototype.getGroupMenuOptions.call(this, group) || [];
+            // Add our custom option at the end
+            opts.push(null); // separator
+            opts.push({
+                content: "Custom Group Color",
+                callback: function() {
+                    const originalColor = group.color || "#a4a4a4";
+                    
+                    new LovelyColorPicker(
+                        originalColor, 
+                        function(newHex) {
+                            group.color = newHex;
+                            if (canvas) canvas.setDirty(true, true);
+                            app.graph.setDirtyCanvas(true, true);
+                        },
+                        "Custom Group Color",
+                        false,
+                        function() {
+                            group.color = originalColor;
+                            if (canvas) canvas.setDirty(true, true);
+                            app.graph.setDirtyCanvas(true, true);
+                        }
+                    );
                 }
-                
-                // Add our custom option
-                options.push(null); // separator
-                options.push({
-                    content: "Custom Group Color",
-                    callback: () => {
-                        const originalColor = group.color || "#a4a4a4";
-                        
-                        new LovelyColorPicker(
-                            originalColor, 
-                            (newHex) => {
-                                group.color = newHex;
-                                canvas.setDirty(true, true);
-                            },
-                            "Custom Group Color",
-                            false,
-                            () => {
-                                group.color = originalColor;
-                                canvas.setDirty(true, true);
-                            }
-                        );
-                    }
-                });
-                
-                new LiteGraph.ContextMenu(options, {
-                    event: event,
-                    callback: null,
-                    extra: group
-                }, this.getCanvasWindow());
-                
-                return;
-            }
+            });
             
-            // Call original for nodes and other elements
-            if (origProcessContextMenu) {
-                return origProcessContextMenu.apply(this, arguments);
-            }
+            return opts;
         }
     }
 });
