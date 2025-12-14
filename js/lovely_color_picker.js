@@ -176,7 +176,7 @@ export class LovelyColorPicker {
                         // Allow only digits 0-9
                         let clean = e.target.value.replace(/\D/g, '');
                         let val = clean ? Math.min(255, parseInt(clean)) : 0;
-                        e.target.value = clean ? String(val) : '';
+                        e.target.value = clean ? String(val) : '0';
                         const cur = this.getCurrentRgb(); cur[key] = val;
                         this.state = ColorUtils.rgbToHsv(cur.r, cur.g, cur.b);
                         this.updateUI('rgb');
