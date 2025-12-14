@@ -17,12 +17,14 @@
 
 ---
 
-## 🛠️ Context Menu Tool
+## 🛠️ Context Menu Tools
+
+### Custom Node Color
 *Accessed via Right-Click on any node.*
 
 This tool allows you to visually change the background color of any node in your workflow.
 
-### 🎮 Controls
+#### 🎮 Controls
 | Control | Icon | Action |
 | :--- | :---: | :--- |
 | **Pick Color** | 🎨 | Use the Saturation/Value square + Hue slider. |
@@ -31,6 +33,18 @@ This tool allows you to visually change the background color of any node in your
 | **Reset** | ↺ | Revert to the node's original default color. |
 
 > **Note:** To use Batch Coloring, select multiple nodes, right-click one of them, and select "Custom Node Color". The chosen color will apply to **all** selected nodes.
+
+### Custom Group Color
+*Accessed via Right-Click → Edit Group.*
+
+Change the background color of workflow groups with the same modern color picker interface.
+
+#### 🎮 Features
+- **Visual Group Styling**: Customize group colors to organize your workflow visually.
+- **Same Picker Interface**: Uses the same glassmorphism color picker with all features (eyedropper, favorites, etc.).
+- **Persistent Colors**: Group colors are saved with your workflow.
+
+> **How to use:** Right-click on a group, select "Edit Group", and choose "Custom Group Color" at the bottom of the menu.
 
 ---
 
