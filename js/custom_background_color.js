@@ -16,7 +16,8 @@ app.registerExtension({
             opts.push({
                 content: "Custom Node Color",
                 callback: () => {
-                    // Close any existing picker logic if needed, though class handles it
+                    // Save original colors before opening picker
+                    const originalColors = nodes.map(n => ({ node: n, color: n.bgcolor || "#000000" }));
                     
                     // Initial color from the primary node
                     const initialColor = node.bgcolor || "#000000";
@@ -29,7 +30,14 @@ app.registerExtension({
                             canvas.setDirty(true, true);
                         },
                         nodes.length > 1 ? `Custom Color (${nodes.length})` : "Custom Node Color",
-                        nodes.length > 1  // Hide reset button if multiple nodes selected
+                        nodes.length > 1,  // Hide reset button if multiple nodes selected
+                        () => {
+                            // Cancel callback: restore original colors
+                            originalColors.forEach(({ node: n, color }) => {
+                                n.bgcolor = color;
+                            });
+                            canvas.setDirty(true, true);
+                        }
                     );
                 }
             });
