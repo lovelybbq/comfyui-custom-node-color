@@ -169,11 +169,14 @@ export class LovelyColorPicker {
             const col = $el("div", { className: "cp-col", parent: rgbRow });
             $el("span", { className: "cp-label", text: key.toUpperCase(), parent: col });
             this.rgbInputs[key] = $el("input", { 
-                className: "cp-input", attrs: { type: "number", min: 0, max: 255 }, 
+                className: "cp-input", attrs: { type: "text", maxlength: 3 }, 
                 events: { 
                     pointerdown: e => e.stopPropagation(),
                     input: (e) => {
-                        let val = Math.max(0, Math.min(255, parseInt(e.target.value) || 0));
+                        // Allow only digits 0-9
+                        let clean = e.target.value.replace(/\D/g, '');
+                        let val = clean ? Math.min(255, parseInt(clean)) : 0;
+                        e.target.value = clean ? String(val) : '';
                         const cur = this.getCurrentRgb(); cur[key] = val;
                         this.state = ColorUtils.rgbToHsv(cur.r, cur.g, cur.b);
                         this.updateUI('rgb');
