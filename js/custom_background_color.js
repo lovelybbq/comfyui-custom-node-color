@@ -16,14 +16,20 @@ const DEFAULT_GROUP_COLOR = "#a4a4a4";
  * Opens color picker for nodes or groups
  */
 function openColorPicker(items, colorProp, initialColor, title, hideReset, onUpdate, applyToHeader = false) {
-    const originalColors = items.map(item => ({ 
-        item, 
-        bgcolor: item.bgcolor || null,
-        color: item.color || null
-    }));
+    // Save only the properties we're going to modify
+    const originalColors = items.map(item => {
+        const saved = { 
+            item, 
+            [colorProp]: item[colorProp] || null
+        };
+        if (applyToHeader) {
+            saved.headerColor = item.color || null;
+        }
+        return saved;
+    });
     
     // Use existing header color if available, otherwise use initialColor
-    const startColor = applyToHeader ? (items[0].color || items[0].bgcolor || initialColor) : (items[0][colorProp] || initialColor);
+    const startColor = applyToHeader ? (items[0].color || items[0][colorProp] || initialColor) : (items[0][colorProp] || initialColor);
     
     new LovelyColorPicker(
         startColor,
@@ -39,12 +45,18 @@ function openColorPicker(items, colorProp, initialColor, title, hideReset, onUpd
         title,
         hideReset,
         () => {
-            originalColors.forEach(({ item, bgcolor, color }) => {
-                if (bgcolor !== null) item.bgcolor = bgcolor;
-                else delete item.bgcolor;
+            // Restore only the properties we modified
+            originalColors.forEach((saved) => {
+                const { item } = saved;
+                const savedColor = saved[colorProp];
                 
-                if (color !== null) item.color = color;
-                else delete item.color;
+                if (savedColor !== null) item[colorProp] = savedColor;
+                else delete item[colorProp];
+                
+                if (applyToHeader) {
+                    if (saved.headerColor !== null) item.color = saved.headerColor;
+                    else delete item.color;
+                }
             });
             onUpdate();
         }
