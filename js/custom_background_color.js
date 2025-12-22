@@ -28,10 +28,8 @@ function openColorPicker(items, colorProp, initialColor, title, hideReset, onUpd
         return originalState;
     });
     
-    // Use existing header color if available, otherwise use initialColor
-    const startColor = applyToHeader 
-        ? (items[0].color ?? items[0][colorProp] ?? initialColor) 
-        : (items[0][colorProp] ?? initialColor);
+    // Use existing color from node's colorProp, otherwise use initialColor
+    const startColor = items[0][colorProp] ?? initialColor;
     
     new LovelyColorPicker(
         startColor,
