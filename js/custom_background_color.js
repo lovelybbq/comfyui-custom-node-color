@@ -15,19 +15,51 @@ const DEFAULT_GROUP_COLOR = "#a4a4a4";
 /**
  * Opens color picker for nodes or groups
  */
-function openColorPicker(items, colorProp, initialColor, title, hideReset, onUpdate) {
-    const originalColors = items.map(item => ({ item, color: item[colorProp] || initialColor }));
+function openColorPicker(items, colorProp, initialColor, title, hideReset, onUpdate, applyToHeader = false) {
+    // Save only the properties we're going to modify
+    const originalColors = items.map(item => {
+        const originalState = { 
+            item, 
+            [colorProp]: item[colorProp] !== undefined ? item[colorProp] : null
+        };
+        if (applyToHeader) {
+            originalState.headerColor = item.color !== undefined ? item.color : null;
+        }
+        return originalState;
+    });
+    
+    // Use existing header color if available, otherwise use initialColor
+    const startColor = applyToHeader 
+        ? (items[0].color ?? items[0][colorProp] ?? initialColor) 
+        : (items[0][colorProp] ?? initialColor);
     
     new LovelyColorPicker(
-        items[0][colorProp] || initialColor,
+        startColor,
         (newHex) => {
-            items.forEach(item => item[colorProp] = newHex);
+            items.forEach(item => {
+                item[colorProp] = newHex;
+                if (applyToHeader) {
+                    item.color = newHex;
+                }
+            });
             onUpdate();
         },
         title,
         hideReset,
         () => {
-            originalColors.forEach(({ item, color }) => item[colorProp] = color);
+            // Restore only the properties we modified
+            originalColors.forEach((originalState) => {
+                const { item } = originalState;
+                const savedColor = originalState[colorProp];
+                
+                if (savedColor !== null) item[colorProp] = savedColor;
+                else delete item[colorProp];
+                
+                if (applyToHeader) {
+                    if (originalState.headerColor !== null) item.color = originalState.headerColor;
+                    else delete item.color;
+                }
+            });
             onUpdate();
         }
     );
@@ -58,7 +90,8 @@ app.registerExtension({
                     DEFAULT_NODE_COLOR,
                     nodes.length > 1 ? `Custom Color (${nodes.length})` : "Custom Node Color",
                     nodes.length > 1,
-                    () => canvas.setDirty(true, true)
+                    () => canvas.setDirty(true, true),
+                    true  // Apply to header as well
                 )
             });
             return opts;
