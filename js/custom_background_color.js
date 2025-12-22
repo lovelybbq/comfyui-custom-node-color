@@ -15,19 +15,37 @@ const DEFAULT_GROUP_COLOR = "#a4a4a4";
 /**
  * Opens color picker for nodes or groups
  */
-function openColorPicker(items, colorProp, initialColor, title, hideReset, onUpdate) {
-    const originalColors = items.map(item => ({ item, color: item[colorProp] || initialColor }));
+function openColorPicker(items, colorProp, initialColor, title, hideReset, onUpdate, applyToHeader = false) {
+    const originalColors = items.map(item => ({ 
+        item, 
+        bgcolor: item.bgcolor || null,
+        color: item.color || null
+    }));
+    
+    // Use existing header color if available, otherwise use initialColor
+    const startColor = applyToHeader ? (items[0].color || items[0].bgcolor || initialColor) : (items[0][colorProp] || initialColor);
     
     new LovelyColorPicker(
-        items[0][colorProp] || initialColor,
+        startColor,
         (newHex) => {
-            items.forEach(item => item[colorProp] = newHex);
+            items.forEach(item => {
+                item[colorProp] = newHex;
+                if (applyToHeader) {
+                    item.color = newHex;
+                }
+            });
             onUpdate();
         },
         title,
         hideReset,
         () => {
-            originalColors.forEach(({ item, color }) => item[colorProp] = color);
+            originalColors.forEach(({ item, bgcolor, color }) => {
+                if (bgcolor !== null) item.bgcolor = bgcolor;
+                else delete item.bgcolor;
+                
+                if (color !== null) item.color = color;
+                else delete item.color;
+            });
             onUpdate();
         }
     );
@@ -58,7 +76,8 @@ app.registerExtension({
                     DEFAULT_NODE_COLOR,
                     nodes.length > 1 ? `Custom Color (${nodes.length})` : "Custom Node Color",
                     nodes.length > 1,
-                    () => canvas.setDirty(true, true)
+                    () => canvas.setDirty(true, true),
+                    true  // Apply to header as well
                 )
             });
             return opts;
