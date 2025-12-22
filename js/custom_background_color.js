@@ -18,18 +18,20 @@ const DEFAULT_GROUP_COLOR = "#a4a4a4";
 function openColorPicker(items, colorProp, initialColor, title, hideReset, onUpdate, applyToHeader = false) {
     // Save only the properties we're going to modify
     const originalColors = items.map(item => {
-        const saved = { 
+        const originalState = { 
             item, 
-            [colorProp]: item[colorProp] || null
+            [colorProp]: item[colorProp] !== undefined ? item[colorProp] : null
         };
         if (applyToHeader) {
-            saved.headerColor = item.color || null;
+            originalState.headerColor = item.color !== undefined ? item.color : null;
         }
-        return saved;
+        return originalState;
     });
     
     // Use existing header color if available, otherwise use initialColor
-    const startColor = applyToHeader ? (items[0].color || items[0][colorProp] || initialColor) : (items[0][colorProp] || initialColor);
+    const startColor = applyToHeader 
+        ? (items[0].color ?? items[0][colorProp] ?? initialColor) 
+        : (items[0][colorProp] ?? initialColor);
     
     new LovelyColorPicker(
         startColor,
@@ -46,15 +48,15 @@ function openColorPicker(items, colorProp, initialColor, title, hideReset, onUpd
         hideReset,
         () => {
             // Restore only the properties we modified
-            originalColors.forEach((saved) => {
-                const { item } = saved;
-                const savedColor = saved[colorProp];
+            originalColors.forEach((originalState) => {
+                const { item } = originalState;
+                const savedColor = originalState[colorProp];
                 
                 if (savedColor !== null) item[colorProp] = savedColor;
                 else delete item[colorProp];
                 
                 if (applyToHeader) {
-                    if (saved.headerColor !== null) item.color = saved.headerColor;
+                    if (originalState.headerColor !== null) item.color = originalState.headerColor;
                     else delete item.color;
                 }
             });
