@@ -72,10 +72,15 @@ function openColorPicker(items, colorProp, initialColor, title, hideReset, onUpd
 app.registerExtension({
     name: "Comfy.LovelyBBQ.ContextMenu",
     async setup() {
+        // Prevent multiple registrations
+        if (LGraphCanvas.prototype._customNodeColorPatched) {
+            return;
+        }
+        
         // Node color menu
         const origNodeOptions = LGraphCanvas.prototype.getNodeMenuOptions;
         LGraphCanvas.prototype.getNodeMenuOptions = function(node) {
-            const opts = origNodeOptions.apply(this, arguments);
+            const opts = origNodeOptions?.apply(this, arguments) || [];
             const canvas = this;
             const nodes = (canvas.selected_nodes?.[node.id]) 
                 ? Object.values(canvas.selected_nodes) 
@@ -121,5 +126,8 @@ app.registerExtension({
             });
             return opts;
         };
+        
+        // Mark as patched at the very end
+        LGraphCanvas.prototype._customNodeColorPatched = true;
     }
 });
