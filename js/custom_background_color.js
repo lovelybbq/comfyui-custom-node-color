@@ -119,5 +119,60 @@ app.registerExtension({
                 )
             }
         ];
-    }
+    },
+
+    // Commands for keyboard shortcuts
+    commands: [
+        {
+            id: "customColor",
+            label: "Custom Color",
+            function: () => {
+                const canvas = app.canvas;
+                const graph = app.graph;
+                
+                // Check for selected nodes first (priority over groups)
+                const selectedNodes = canvas.selected_nodes ? Object.values(canvas.selected_nodes) : [];
+                if (selectedNodes.length > 0) {
+                    openColorPicker(
+                        selectedNodes,
+                        "bgcolor",
+                        DEFAULT_NODE_COLOR,
+                        selectedNodes.length > 1 ? `Custom Color (${selectedNodes.length})` : "Custom Node Color",
+                        selectedNodes.length > 1,
+                        () => canvas.setDirty(true, true),
+                        true  // Apply to header as well
+                    );
+                    return;
+                }
+                
+                // If no nodes selected, check for selected group
+                let selectedGroup = null;
+                if (graph._groups && graph._groups.length > 0) {
+                    selectedGroup = graph._groups.find(g => g._selected || g.selected);
+                }
+                
+                if (selectedGroup) {
+                    openColorPicker(
+                        [selectedGroup],
+                        "color",
+                        DEFAULT_GROUP_COLOR,
+                        "Custom Group Color",
+                        false,
+                        () => {
+                            canvas?.setDirty(true, true);
+                            graph.setDirtyCanvas(true, true);
+                        }
+                    );
+                }
+            }
+        }
+    ],
+
+    // Keybindings
+    keybindings: [
+        {
+            combo: { key: "c" },
+            commandId: "customColor"
+        }
+    ]
 });

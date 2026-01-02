@@ -104,7 +104,7 @@ const ColorUtils = {
 
 const FavoritesManager = {
     KEY: "ComfyUI_CustomColorNode_Favorites",
-    MAX: 7,
+    MAX: 14,
     load: () => { try { return JSON.parse(localStorage.getItem(FavoritesManager.KEY)) || []; } catch { return []; } },
     save: (c) => localStorage.setItem(FavoritesManager.KEY, JSON.stringify(c)),
     has: (h) => FavoritesManager.load().includes(h),
