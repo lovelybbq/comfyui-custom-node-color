@@ -134,7 +134,13 @@ const FavoritesManager = {
 // ============================================================================
 
 export class LovelyColorPicker {
+    static isOpen = false;
+
     constructor(initialColor, onColorChange, title = "Select Color", hideReset = false, onCancel = null, shapeConfig = null) {
+        // Prevent opening multiple pickers
+        if (LovelyColorPicker.isOpen) return;
+        LovelyColorPicker.isOpen = true;
+        
         this.onColorChange = onColorChange;
         this.onCancel = onCancel;
         this.initialColor = initialColor || "#000000";
@@ -419,6 +425,7 @@ export class LovelyColorPicker {
     }
 
     close() {
+        LovelyColorPicker.isOpen = false;
         if (this.clickOutsideHandler) {
             document.removeEventListener("pointerdown", this.clickOutsideHandler, { capture: true });
             this.clickOutsideHandler = null;
