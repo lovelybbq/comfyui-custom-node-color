@@ -97,7 +97,7 @@ app.registerExtension({
         };
     },
     
-    // ✅ NEW: Use getNodeMenuItems hook for node context menu
+    // Use getNodeMenuItems hook for node context menu
     getNodeMenuItems(node) {
         const canvas = app.canvas;
         const nodes = (canvas.selected_nodes?.[node.id]) 
