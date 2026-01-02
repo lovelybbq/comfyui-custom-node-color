@@ -155,7 +155,7 @@ export class LovelyColorPicker {
         this.hideReset = hideReset;
         this.isPicking = false;
         
-        // Shape config: { nodes: [...], onShapeChange: fn, initialShapes: [...] }
+        // Shape config: { initialShapes: [...], initialDarkerHeader: bool, onShapeChange: fn, onHeaderStyleChange: fn }
         this.shapeConfig = shapeConfig;
         this.currentShape = shapeConfig?.initialShapes?.[0] ?? null;
         
