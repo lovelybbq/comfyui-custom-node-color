@@ -242,7 +242,7 @@ export class LovelyColorPicker {
         if (!this.hideReset) {
             this.resetBtn = $el("div", { 
                 className: "cp-icon-btn", text: "↺", attrs: { title: "Reset to original color" },
-                events: { click: () => this.applyColor(this.initialColor) },
+                events: { click: () => this.applyColor(this.initialColor, true) },
                 parent: ctrlRow 
             });
         }
@@ -355,9 +355,16 @@ export class LovelyColorPicker {
         }
     }
 
-    applyColor(hex) {
+    applyColor(hex, resetShape = false) {
         const rgb = ColorUtils.hexToRgb(hex);
         this.state = ColorUtils.rgbToHsv(rgb.r, rgb.g, rgb.b);
+        
+        // Reset shape to initial value (only when explicitly requested, e.g., Reset button)
+        if (resetShape && this.shapeConfig?.initialShapes?.[0] !== undefined) {
+            const initialShape = this.shapeConfig.initialShapes[0];
+            this.setShape(initialShape);
+        }
+        
         this.updateUI();
     }
 
