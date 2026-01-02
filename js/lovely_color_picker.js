@@ -49,7 +49,7 @@ if (!document.getElementById('lovely-picker-styles')) {
         .cp-icon-btn:hover { background: rgba(255,255,255,0.2); color: white; }
         .cp-icon-btn.modified { background: rgba(255, 50, 50, 0.2) !important; border-color: rgba(255, 80, 80, 0.4) !important; color: #ffcccc !important; box-shadow: 0 0 8px rgba(255, 0, 0, 0.25); }
         .cp-fav-grid { 
-            display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; min-height: 24px; padding: 8px;
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; min-height: 24px; padding: 10px;
             background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
         }
         .cp-fav-empty { grid-column: span 7; text-align: center; font-size: 10px; opacity: 0.4; padding: 4px 0; }
@@ -61,7 +61,7 @@ if (!document.getElementById('lovely-picker-styles')) {
         .cp-swatch.active { border: 2px solid white !important; box-shadow: 0 0 0 2px rgba(0,0,0,0.5), 0 0 8px rgba(255,255,255,0.5); transform: scale(1.1); z-index: 5; }
         .cp-swatch.marking-delete { border-color: #ff4444 !important; opacity: 0.5; transform: scale(0.8); position: relative; }
         .cp-swatch.marking-delete::after { content: "×"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ff4444; font-size: 20px; font-weight: bold; pointer-events: none; }
-        .cp-shape-row { display: flex; gap: 6px; }
+        .cp-shape-row { display: flex; gap: 8px; }
         .cp-shape-btn {
             flex: 1; padding: 8px 4px; border-radius: 6px; font-size: 11px;
             background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
@@ -218,7 +218,7 @@ export class LovelyColorPicker {
         });
 
         // Controls
-        const ctrlRow = $el("div", { className: "cp-row", style: { gap: "6px" }, parent: this.el });
+        const ctrlRow = $el("div", { className: "cp-row", parent: this.el });
         
         // Hex
         this.hexInput = $el("input", { 
@@ -312,7 +312,7 @@ export class LovelyColorPicker {
         }
 
         // Footer
-        const footer = $el("div", { style: { display: "flex", flexDirection: "column", gap: "8px", marginTop: "5px" }, parent: this.el });
+        const footer = $el("div", { style: { display: "flex", flexDirection: "column", gap: "8px" }, parent: this.el });
         $el("button", { className: "cp-btn done", text: "Done", events: { click: () => this.close() }, parent: footer });
         $el("button", { className: "cp-btn cancel", text: "Cancel", events: { click: () => this.cancel() }, parent: footer });
 

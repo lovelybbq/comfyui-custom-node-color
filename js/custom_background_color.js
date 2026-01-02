@@ -8,6 +8,31 @@ import { LovelyColorPicker } from "./lovely_color_picker.js";
 const DEFAULT_NODE_COLOR = "#000000";
 const DEFAULT_GROUP_COLOR = "#a4a4a4";
 const HEADER_DARKEN_AMOUNT = 0.25; // 25% darker
+const SETTINGS_KEY = "ComfyUI_CustomColorNode_Settings";
+
+// ============================================================================
+// SETTINGS MANAGER
+// ============================================================================
+const Settings = {
+    _cache: null,
+    load() {
+        if (!this._cache) {
+            try { this._cache = JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}; } 
+            catch { this._cache = {}; }
+        }
+        return this._cache;
+    },
+    save() {
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(this._cache));
+    },
+    get darkerHeader() {
+        return !!this.load().darkerHeader;
+    },
+    set darkerHeader(value) {
+        this.load().darkerHeader = value;
+        this.save();
+    }
+};
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -27,26 +52,11 @@ function darkenColor(hex, amount) {
 }
 
 /**
- * Check if header is darker than bgcolor (to detect darker header mode)
- */
-function isDarkerHeader(item) {
-    if (!item.color || !item.bgcolor) return false;
-    const headerHex = item.color.replace('#', '');
-    const bgHex = item.bgcolor.replace('#', '');
-    if (headerHex.length < 6 || bgHex.length < 6) return false;
-    const headerNum = parseInt(headerHex, 16);
-    const bgNum = parseInt(bgHex, 16);
-    const headerBrightness = ((headerNum >> 16) & 255) + ((headerNum >> 8) & 255) + (headerNum & 255);
-    const bgBrightness = ((bgNum >> 16) & 255) + ((bgNum >> 8) & 255) + (bgNum & 255);
-    return headerBrightness < bgBrightness - 30; // threshold to detect darker header
-}
-
-/**
  * Opens color picker for nodes or groups
  */
 function openColorPicker(items, colorProp, initialColor, title, hideReset, onUpdate, applyToHeader = false, enableShape = false) {
-    // Track darker header state
-    let darkerHeaderEnabled = enableShape && items.length > 0 && isDarkerHeader(items[0]);
+    // Track darker header state - read from global settings
+    let darkerHeaderEnabled = enableShape && Settings.darkerHeader;
     
     // Save only the properties we're going to modify
     const originalColors = items.map(item => {
@@ -78,6 +88,7 @@ function openColorPicker(items, colorProp, initialColor, title, hideReset, onUpd
         },
         onHeaderStyleChange: (isDarker, currentHex) => {
             darkerHeaderEnabled = isDarker;
+            Settings.darkerHeader = isDarker;
             items.forEach(item => {
                 if (isDarker) {
                     item.color = darkenColor(currentHex, HEADER_DARKEN_AMOUNT);
