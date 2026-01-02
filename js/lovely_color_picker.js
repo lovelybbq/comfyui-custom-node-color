@@ -48,7 +48,10 @@ if (!document.getElementById('lovely-picker-styles')) {
         }
         .cp-icon-btn:hover { background: rgba(255,255,255,0.2); color: white; }
         .cp-icon-btn.modified { background: rgba(255, 50, 50, 0.2) !important; border-color: rgba(255, 80, 80, 0.4) !important; color: #ffcccc !important; box-shadow: 0 0 8px rgba(255, 0, 0, 0.25); }
-        .cp-fav-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; min-height: 24px; }
+        .cp-fav-grid { 
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; min-height: 24px; padding: 8px;
+            background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+        }
         .cp-fav-empty { grid-column: span 7; text-align: center; font-size: 10px; opacity: 0.4; padding: 4px 0; }
         .cp-swatch { 
             aspect-ratio: 1; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); box-sizing: border-box; cursor: pointer; transition: 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -66,6 +69,12 @@ if (!document.getElementById('lovely-picker-styles')) {
         }
         .cp-shape-btn:hover { background: rgba(255,255,255,0.15); color: white; }
         .cp-shape-btn.active { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.5); color: white; box-shadow: 0 0 8px rgba(255,255,255,0.2); }
+        .cp-icon-btn.active { 
+            background: rgba(100, 150, 255, 0.3) !important; 
+            border-color: rgba(100, 150, 255, 0.6) !important; 
+            color: rgb(150, 200, 255) !important;
+            box-shadow: 0 0 8px rgba(100, 150, 255, 0.4) !important;
+        }
     `;
     document.head.appendChild(cssStyle);
 }
@@ -152,6 +161,10 @@ export class LovelyColorPicker {
         this.shapeConfig = shapeConfig;
         this.currentShape = shapeConfig?.initialShapes?.[0] ?? null;
         
+        // Darker header config
+        this.darkerHeader = shapeConfig?.initialDarkerHeader ?? false;
+        this.onHeaderStyleChange = shapeConfig?.onHeaderStyleChange ?? null;
+        
         // Init State
         const startRgb = ColorUtils.hexToRgb(this.initialColor);
         this.state = ColorUtils.rgbToHsv(startRgb.r, startRgb.g, startRgb.b);
@@ -228,7 +241,7 @@ export class LovelyColorPicker {
         // Reset Btn
         if (!this.hideReset) {
             this.resetBtn = $el("div", { 
-                className: "cp-icon-btn", text: "↺", attrs: { title: "Reset" },
+                className: "cp-icon-btn", text: "↺", attrs: { title: "Reset to original color" },
                 events: { click: () => this.applyColor(this.initialColor) },
                 parent: ctrlRow 
             });
@@ -245,9 +258,21 @@ export class LovelyColorPicker {
             });
         }
 
+        // Darker header button (only for nodes)
+        if (this.shapeConfig) {
+            this.darkerHeaderBtn = $el("div", { 
+                className: `cp-icon-btn ${this.darkerHeader ? "active" : ""}`,
+                text: "◐",
+                attrs: { title: "Toggle darker header" },
+                events: { click: () => this.toggleDarkerHeader() },
+                parent: ctrlRow
+            });
+        }
+
         // Favorites
         this.starBtn = $el("div", { 
             className: "cp-icon-btn", style: { fontSize: "18px" },
+            attrs: { title: "Add to favorites" },
             events: {
                 click: () => {
                     FavoritesManager.toggle(this.getCurrentHex());
@@ -266,9 +291,8 @@ export class LovelyColorPicker {
         // Fav Container
         this.favContainer = $el("div", { className: "cp-fav-grid", parent: this.el });
 
-        // Shape selector (only for nodes)
+        // Shape selector (only for nodes) - 4 buttons in a row
         if (this.shapeConfig) {
-            const shapeLabel = $el("div", { className: "cp-label", text: "SHAPE", style: { marginTop: "6px", marginBottom: "4px" }, parent: this.el });
             const shapeRow = $el("div", { className: "cp-shape-row", parent: this.el });
             this.shapeButtons = {};
             const shapes = { null: "Default", 1: "Box", 2: "Round", 4: "Card" };
@@ -277,6 +301,7 @@ export class LovelyColorPicker {
                 const btn = $el("button", {
                     className: `cp-shape-btn ${shapeVal === this.currentShape ? "active" : ""}`,
                     text: name,
+                    attrs: { title: `Set shape to ${name}` },
                     events: {
                         click: () => this.setShape(shapeVal)
                     },
@@ -375,10 +400,16 @@ export class LovelyColorPicker {
         this.starBtn.textContent = isFav ? "★" : "☆";
         this.starBtn.style.color = isFav ? "#FFD700" : "#ccc";
         this.starBtn.style.borderColor = isFav ? "#FFD700" : "rgba(255,255,255,0.2)";
+        this.starBtn.title = isFav ? "Remove from favorites" : "Add to favorites";
 
         if (this.resetBtn) {
             if (hex.toLowerCase() !== this.initialColor.toLowerCase()) this.resetBtn.classList.add("modified");
             else this.resetBtn.classList.remove("modified");
+        }
+        
+        // Update darker header button title
+        if (this.darkerHeaderBtn) {
+            this.darkerHeaderBtn.title = this.darkerHeader ? "Disable darker header" : "Enable darker header";
         }
     }
 
@@ -412,6 +443,18 @@ export class LovelyColorPicker {
         // Apply shape to nodes
         if (this.shapeConfig.onShapeChange) {
             this.shapeConfig.onShapeChange(shapeValue);
+        }
+    }
+
+    toggleDarkerHeader() {
+        this.darkerHeader = !this.darkerHeader;
+        if (this.darkerHeaderBtn) {
+            this.darkerHeaderBtn.classList.toggle("active", this.darkerHeader);
+            this.darkerHeaderBtn.setAttribute("title", this.darkerHeader ? "Disable darker header" : "Enable darker header");
+        }
+        
+        if (this.onHeaderStyleChange) {
+            this.onHeaderStyleChange(this.darkerHeader, this.getCurrentHex());
         }
     }
 
