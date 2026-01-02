@@ -68,7 +68,8 @@ function openColorPicker(items, colorProp, initialColor, title, hideReset, onUpd
             originalState.headerColor = item.color !== undefined ? item.color : null;
         }
         if (enableShape) {
-            originalState.shape = item.shape !== undefined ? item.shape : null;
+            originalState.hadShape = item.shape !== undefined;
+            originalState.shape = item.shape;
         }
         return originalState;
     });
@@ -132,8 +133,12 @@ function openColorPicker(items, colorProp, initialColor, title, hideReset, onUpd
                 }
                 
                 if (enableShape) {
-                    if (originalState.shape !== null) item.shape = originalState.shape;
-                    else delete item.shape;
+                    if (originalState.hadShape) {
+                        item.shape = originalState.shape;
+                    } else {
+                        item.shape = undefined;
+                        delete item.shape;
+                    }
                 }
             });
             onUpdate();

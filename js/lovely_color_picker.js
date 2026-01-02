@@ -410,8 +410,14 @@ export class LovelyColorPicker {
         this.starBtn.title = isFav ? "Remove from favorites" : "Add to favorites";
 
         if (this.resetBtn) {
-            if (hex.toLowerCase() !== this.initialColor.toLowerCase()) this.resetBtn.classList.add("modified");
-            else this.resetBtn.classList.remove("modified");
+            const colorChanged = hex.toLowerCase() !== this.initialColor.toLowerCase();
+            const shapeChanged = this.shapeConfig && (this.currentShape !== this.shapeConfig.initialShapes?.[0]);
+            
+            if (colorChanged || shapeChanged) {
+                this.resetBtn.classList.add("modified");
+            } else {
+                this.resetBtn.classList.remove("modified");
+            }
         }
         
         // Update darker header button title
@@ -451,6 +457,9 @@ export class LovelyColorPicker {
         if (this.shapeConfig.onShapeChange) {
             this.shapeConfig.onShapeChange(shapeValue);
         }
+        
+        // Update UI to reflect changes (e.g., Reset button state)
+        this.updateUI();
     }
 
     toggleDarkerHeader() {
