@@ -15,7 +15,7 @@ const DEFAULT_GROUP_COLOR = "#a4a4a4";
 /**
  * Opens color picker for nodes or groups
  */
-function openColorPicker(items, colorProp, initialColor, title, hideReset, onUpdate, applyToHeader = false) {
+function openColorPicker(items, colorProp, initialColor, title, hideReset, onUpdate, applyToHeader = false, enableShape = false) {
     // Save only the properties we're going to modify
     const originalColors = items.map(item => {
         const originalState = { 
@@ -25,11 +25,25 @@ function openColorPicker(items, colorProp, initialColor, title, hideReset, onUpd
         if (applyToHeader) {
             originalState.headerColor = item.color !== undefined ? item.color : null;
         }
+        if (enableShape) {
+            originalState.shape = item.shape !== undefined ? item.shape : null;
+        }
         return originalState;
     });
     
     // Use existing color from node's colorProp, otherwise use initialColor
     const startColor = items[0][colorProp] ?? initialColor;
+    
+    // Shape config (only for nodes)
+    const shapeConfig = enableShape ? {
+        initialShapes: items.map(item => item.shape ?? null),
+        onShapeChange: (shapeValue) => {
+            items.forEach(item => {
+                item.shape = shapeValue;
+            });
+            onUpdate();
+        }
+    } : null;
     
     new LovelyColorPicker(
         startColor,
@@ -57,9 +71,15 @@ function openColorPicker(items, colorProp, initialColor, title, hideReset, onUpd
                     if (originalState.headerColor !== null) item.color = originalState.headerColor;
                     else delete item.color;
                 }
+                
+                if (enableShape) {
+                    if (originalState.shape !== null) item.shape = originalState.shape;
+                    else delete item.shape;
+                }
             });
             onUpdate();
-        }
+        },
+        shapeConfig
     );
 }
 
@@ -115,7 +135,8 @@ app.registerExtension({
                     nodes.length > 1 ? `Custom Color (${nodes.length})` : "Custom Node Color",
                     nodes.length > 1,
                     () => canvas.setDirty(true, true),
-                    true  // Apply to header as well
+                    true,  // Apply to header as well
+                    true   // Enable shape selector
                 )
             }
         ];
@@ -140,7 +161,8 @@ app.registerExtension({
                         selectedNodes.length > 1 ? `Custom Color (${selectedNodes.length})` : "Custom Node Color",
                         selectedNodes.length > 1,
                         () => canvas.setDirty(true, true),
-                        true  // Apply to header as well
+                        true,  // Apply to header as well
+                        true   // Enable shape selector
                     );
                     return;
                 }

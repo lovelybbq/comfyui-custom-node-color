@@ -58,6 +58,14 @@ if (!document.getElementById('lovely-picker-styles')) {
         .cp-swatch.active { border: 2px solid white !important; box-shadow: 0 0 0 2px rgba(0,0,0,0.5), 0 0 8px rgba(255,255,255,0.5); transform: scale(1.1); z-index: 5; }
         .cp-swatch.marking-delete { border-color: #ff4444 !important; opacity: 0.5; transform: scale(0.8); position: relative; }
         .cp-swatch.marking-delete::after { content: "×"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ff4444; font-size: 20px; font-weight: bold; pointer-events: none; }
+        .cp-shape-row { display: flex; gap: 6px; }
+        .cp-shape-btn {
+            flex: 1; padding: 8px 4px; border-radius: 6px; font-size: 11px;
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+            color: rgba(255,255,255,0.7); cursor: pointer; transition: all 0.2s;
+        }
+        .cp-shape-btn:hover { background: rgba(255,255,255,0.15); color: white; }
+        .cp-shape-btn.active { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.5); color: white; box-shadow: 0 0 8px rgba(255,255,255,0.2); }
     `;
     document.head.appendChild(cssStyle);
 }
@@ -126,13 +134,17 @@ const FavoritesManager = {
 // ============================================================================
 
 export class LovelyColorPicker {
-    constructor(initialColor, onColorChange, title = "Select Color", hideReset = false, onCancel = null) {
+    constructor(initialColor, onColorChange, title = "Select Color", hideReset = false, onCancel = null, shapeConfig = null) {
         this.onColorChange = onColorChange;
         this.onCancel = onCancel;
         this.initialColor = initialColor || "#000000";
         this.title = title;
         this.hideReset = hideReset;
         this.isPicking = false;
+        
+        // Shape config: { nodes: [...], onShapeChange: fn, initialShapes: [...] }
+        this.shapeConfig = shapeConfig;
+        this.currentShape = shapeConfig?.initialShapes?.[0] ?? null;
         
         // Init State
         const startRgb = ColorUtils.hexToRgb(this.initialColor);
@@ -248,6 +260,26 @@ export class LovelyColorPicker {
         // Fav Container
         this.favContainer = $el("div", { className: "cp-fav-grid", parent: this.el });
 
+        // Shape selector (only for nodes)
+        if (this.shapeConfig) {
+            const shapeLabel = $el("div", { className: "cp-label", text: "SHAPE", style: { marginTop: "6px", marginBottom: "4px" }, parent: this.el });
+            const shapeRow = $el("div", { className: "cp-shape-row", parent: this.el });
+            this.shapeButtons = {};
+            const shapes = { null: "Default", 1: "Box", 2: "Round", 4: "Card" };
+            Object.entries(shapes).forEach(([value, name]) => {
+                const shapeVal = value === "null" ? null : parseInt(value);
+                const btn = $el("button", {
+                    className: `cp-shape-btn ${shapeVal === this.currentShape ? "active" : ""}`,
+                    text: name,
+                    events: {
+                        click: () => this.setShape(shapeVal)
+                    },
+                    parent: shapeRow
+                });
+                this.shapeButtons[value] = btn;
+            });
+        }
+
         // Footer
         const footer = $el("div", { style: { display: "flex", flexDirection: "column", gap: "8px", marginTop: "5px" }, parent: this.el });
         $el("button", { className: "cp-btn done", text: "Done", events: { click: () => this.close() }, parent: footer });
@@ -359,6 +391,22 @@ export class LovelyColorPicker {
                 parent: this.favContainer 
             });
         });
+    }
+
+    setShape(shapeValue) {
+        if (!this.shapeConfig) return;
+        this.currentShape = shapeValue;
+        
+        // Update button states
+        Object.entries(this.shapeButtons).forEach(([val, btn]) => {
+            const btnShapeVal = val === "null" ? null : parseInt(val);
+            btn.classList.toggle("active", btnShapeVal === shapeValue);
+        });
+        
+        // Apply shape to nodes
+        if (this.shapeConfig.onShapeChange) {
+            this.shapeConfig.onShapeChange(shapeValue);
+        }
     }
 
     cancel() {
