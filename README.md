@@ -11,9 +11,12 @@
 
 - **Glassmorphism UI**: A modern interface with blur effects and smooth animations.
 - **Eyedropper Tool 🖊️**: Pick any color from your screen (works outside the browser window on Chrome/Edge/Opera).
-- **Favorites System ⭐**: Save up to 7 colors with a smart FIFO queue and overwrite warnings.
-- **Batch Coloring**: Apply color to multiple selected nodes instantly.
-- **Smart UX**: Auto-save on click-away and quick reset options.
+- **Favorites System ⭐**: Save up to 14 colors with a smart FIFO queue and overwrite warnings.
+- **Node Shape Selector**: Choose from 4 node shapes (Default, Box, Round, Card).
+- **Darker Header Option**: Apply a darker header style to nodes for better visual hierarchy.
+- **Keyboard Shortcut**: Press `C` key to quickly open the color picker for selected nodes.
+- **Batch Coloring**: Apply color and shape to multiple selected nodes instantly.
+- **Smart UX**: Auto-save on click-away, quick reset options, and helpful tooltips.
 
 ---
 
@@ -29,10 +32,14 @@ This tool allows you to visually change the background color of any node in your
 | :--- | :---: | :--- |
 | **Pick Color** | 🎨 | Use the Saturation/Value square + Hue slider. |
 | **Eyedropper** | 🖊️ | Pick a pixel color from anywhere on your screen. |
+| **Darker Header** | ◐ | Toggle darker header style (global setting). |
 | **Favorite** | ☆ / ★ | Save current color / Remove from favorites. |
-| **Reset** | ↺ | Revert to the node's original default color. |
+| **Reset** | ↺ | Revert to the node's original color and shape. |
+| **Shape Selector** | Buttons | Choose node shape: Default, Box, Round, or Card. |
 
-> **Note:** To use Batch Coloring, select multiple nodes, right-click one of them, and select "Custom Node Color". The chosen color will apply to **all** selected nodes.
+> **Keyboard Shortcut:** Press `C` key with nodes selected to quickly open the color picker.
+
+> **Note:** To use Batch Coloring, select multiple nodes, right-click one of them, and select "Custom Node Color". The chosen color and shape will apply to **all** selected nodes.
 
 ### Custom Group Color
 *Accessed via Right-Click → Edit Group.*
