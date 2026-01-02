@@ -146,8 +146,6 @@ export class LovelyColorPicker {
     static isOpen = false;
 
     constructor(initialColor, onColorChange, title = "Select Color", hideReset = false, onCancel = null, shapeConfig = null) {
-        // Prevent opening multiple pickers
-        if (LovelyColorPicker.isOpen) return;
         LovelyColorPicker.isOpen = true;
         
         this.onColorChange = onColorChange;

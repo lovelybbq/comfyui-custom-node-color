@@ -55,6 +55,9 @@ function darkenColor(hex, amount) {
  * Opens color picker for nodes or groups
  */
 function openColorPicker(items, colorProp, initialColor, title, hideReset, onUpdate, applyToHeader = false, enableShape = false) {
+    // Prevent opening multiple pickers
+    if (LovelyColorPicker.isOpen) return;
+    
     // Track darker header state - read from global settings
     let darkerHeaderEnabled = enableShape && Settings.darkerHeader;
     
