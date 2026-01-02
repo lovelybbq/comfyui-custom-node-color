@@ -69,38 +69,9 @@ function openColorPicker(items, colorProp, initialColor, title, hideReset, onUpd
 
 app.registerExtension({
     name: "Comfy.LovelyBBQ.ContextMenu",
+    
     async setup() {
-        // Prevent multiple registrations
-        if (LGraphCanvas.prototype._customNodeColorPatched) {
-            return;
-        }
-        
-        // Node color menu
-        const origNodeOptions = LGraphCanvas.prototype.getNodeMenuOptions;
-        LGraphCanvas.prototype.getNodeMenuOptions = function(node) {
-            const opts = origNodeOptions?.apply(this, arguments) || [];
-            const canvas = this;
-            const nodes = (canvas.selected_nodes?.[node.id]) 
-                ? Object.values(canvas.selected_nodes) 
-                : [node];
-
-            opts.push(null);
-            opts.push({
-                content: nodes.length > 1 ? `Custom Node Color (${nodes.length})` : "Custom Node Color",
-                callback: () => openColorPicker(
-                    nodes,
-                    "bgcolor",
-                    DEFAULT_NODE_COLOR,
-                    nodes.length > 1 ? `Custom Color (${nodes.length})` : "Custom Node Color",
-                    nodes.length > 1,
-                    () => canvas.setDirty(true, true),
-                    true  // Apply to header as well
-                )
-            });
-            return opts;
-        };
-
-        // Group color menu
+        // Group color menu - still uses old approach (no new API for groups yet)
         const origGroupOptions = LGraphGroup.prototype.getMenuOptions;
         LGraphGroup.prototype.getMenuOptions = function(graphCanvas) {
             const opts = origGroupOptions?.apply(this, arguments) || [];
@@ -124,8 +95,29 @@ app.registerExtension({
             });
             return opts;
         };
-        
-        // Mark as patched at the very end
-        LGraphCanvas.prototype._customNodeColorPatched = true;
+    },
+    
+    // ✅ NEW: Use getNodeMenuItems hook for node context menu
+    getNodeMenuItems(node) {
+        const canvas = app.canvas;
+        const nodes = (canvas.selected_nodes?.[node.id]) 
+            ? Object.values(canvas.selected_nodes) 
+            : [node];
+
+        return [
+            null, // separator
+            {
+                content: nodes.length > 1 ? `Custom Node Color (${nodes.length})` : "Custom Node Color",
+                callback: () => openColorPicker(
+                    nodes,
+                    "bgcolor",
+                    DEFAULT_NODE_COLOR,
+                    nodes.length > 1 ? `Custom Color (${nodes.length})` : "Custom Node Color",
+                    nodes.length > 1,
+                    () => canvas.setDirty(true, true),
+                    true  // Apply to header as well
+                )
+            }
+        ];
     }
 });
