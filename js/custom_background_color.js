@@ -39,16 +39,36 @@ const Settings = {
 // ============================================================================
 
 /**
- * Darken a hex color by a percentage
+ * Darken a hex color by a percentage and increase saturation
  */
 function darkenColor(hex, amount) {
     hex = hex.replace('#', '');
     if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
     const num = parseInt(hex, 16);
-    const r = Math.max(0, Math.floor(((num >> 16) & 255) * (1 - amount)));
-    const g = Math.max(0, Math.floor(((num >> 8) & 255) * (1 - amount)));
-    const b = Math.max(0, Math.floor((num & 255) * (1 - amount)));
-    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    let r = (num >> 16) & 255;
+    let g = (num >> 8) & 255;
+    let b = num & 255;
+    
+    // Convert to HSV
+    r /= 255, g /= 255, b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+    let h = 0, s = (max === 0 ? 0 : d / max), v = max;
+    if (max !== min) {
+        h = (max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4) / 6;
+    }
+    
+    // Darken (reduce V) and increase saturation
+    v *= (1 - amount);
+    s = Math.min(1, s * 1.15); // Increase saturation by 15%
+    
+    // Convert back to RGB
+    const i = Math.floor(h * 6), f = h * 6 - i, p = v * (1 - s), q = v * (1 - f * s), t = v * (1 - (1 - f) * s);
+    const [rOut, gOut, bOut] = [[v, t, p], [q, v, p], [p, v, t], [p, q, v], [t, p, v], [v, p, q]][i % 6] || [0, 0, 0];
+    
+    const rInt = Math.round(rOut * 255);
+    const gInt = Math.round(gOut * 255);
+    const bInt = Math.round(bOut * 255);
+    return "#" + ((1 << 24) + (rInt << 16) + (gInt << 8) + bInt).toString(16).slice(1);
 }
 
 /**
